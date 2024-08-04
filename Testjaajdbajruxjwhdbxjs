@@ -1,6 +1,7 @@
 -- GitHub script
-local function getCode()
-    return "sssd"
-end
 
-return getCode
+-- Define the secret code
+local secretCode = "ssd"
+
+-- Return the secret code
+return secretCode
