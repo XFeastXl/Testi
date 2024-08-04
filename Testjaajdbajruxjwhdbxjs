@@ -1,7 +1,3 @@
--- GitHub script
-
--- Define the secret code
+-- secret_code.lua
 local secretCode = "ssd"
-
--- Return the secret code
 return secretCode
