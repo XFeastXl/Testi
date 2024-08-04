@@ -1,28 +1,6 @@
-local function checkCode(code)
-    -- Check if the code is correct
-    if code == "sssd" then
-        print("hi")
-        game.Players.LocalPlayer.PlayerGui:FindFirstChild("ScreenGui"):Destroy()
-    else
-        game.Players.LocalPlayer:Kick("Incorrect code!")
-    end
+-- GitHub script
+local function getCode()
+    return "sssd"
 end
 
--- Add a check to prevent the code from being accessed by other scripts
-local codeProtection = Instance.new("BoolValue")
-codeProtection.Name = "CodeProtection"
-codeProtection.Parent = script
-
--- Add a check to prevent the code from being accessed by exploiters
-local exploitCheck = Instance.new("LocalScript")
-exploitCheck.Parent = script
-
-exploitCheck.Source = "if getfenv(0).script ~= script then script:Destroy() end"
-
--- Add a check to prevent the code from being accessed by other services
-local serviceCheck = Instance.new("LocalScript")
-serviceCheck.Parent = script
-
-serviceCheck.Source = "if game.GetService(game, 'Players').LocalPlayer ~= script.Parent.Parent then script:Destroy() end"
-
-return checkCode
+return getCode
