@@ -1,1 +1,10 @@
-sssd
+local function checkCode(code)
+    if code == "sssd" then
+        print("hi")
+        game.Players.LocalPlayer.PlayerGui:FindFirstChild("ScreenGui"):Destroy()
+    else
+        game.Players.LocalPlayer:Kick("Incorrect code!")
+    end
+end
+
+return checkCode
