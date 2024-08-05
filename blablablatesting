@@ -1,1 +1,527 @@
-print("hi")
+-- Whitelist table
+local whitelist = {
+    [7054982083] = true,
+    [7074482563] = true,
+}
+
+-- Function to check if a player is whitelisted
+local function isWhitelisted(player)
+    return whitelist[player.UserId]
+end
+
+if isWhitelisted(game.Players.LocalPlayer) then
+-- Create the GUI and buttons
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local Window = OrionLib:MakeWindow({Name = "Scripts", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
+
+local PlayerTab = Window:MakeTab({
+    Name = "Player",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local Section = PlayerTab:AddSection({
+    Name = "Movement"
+})
+
+PlayerTab:AddButton({
+    Name = "WalkSpeed",
+    Callback = function()
+        if isWhitelisted(game.Players.LocalPlayer) then
+            -- Create a GUI to toggle speedhack
+local SpeedhackGUI = Instance.new("ScreenGui")
+SpeedhackGUI.Name = "SpeedhackGUI"
+SpeedhackGUI.Parent = game.Players.LocalPlayer.PlayerGui
+
+local SpeedhackButton = Instance.new("TextButton")
+SpeedhackButton.Name = "SpeedhackButton"
+SpeedhackButton.Text = "Speedhack: Off"
+SpeedhackButton.Size = UDim2.new(0, 100, 0, 30)
+SpeedhackButton.Position = UDim2.new(0, 10, 0, 50)
+SpeedhackButton.Parent = SpeedhackGUI
+
+-- Make the GUI movable
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    SpeedhackGUI.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+SpeedhackButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = SpeedhackGUI.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+-- Speedhack variables
+local toggle = false
+
+-- Function to toggle speedhack
+local function toggleSpeedhack()
+    toggle = not toggle
+    SpeedhackButton.Text = "Speedhack: " .. (toggle and "On" or "Off")
+end
+
+-- Connect the toggle function to the button click event
+SpeedhackButton.Activated:Connect(toggleSpeedhack)
+
+-- Connect the toggle function to the 'G' key press event
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.G then
+        toggleSpeedhack()
+    end
+end)
+
+-- Main loop
+game:GetService("RunService").Heartbeat:Connect(function(deltatime)
+    if toggle then
+        local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+
+        if hum and not hum.SeatPart then
+            local movedir = hum.MoveDirection
+            local speeddir = (movedir * deltatime) * 20
+
+            game.Players.LocalPlayer.Character:TranslateBy(speeddir)
+        end
+    end
+end)
+        else
+            game.Players.LocalPlayer:Kick("You are not whitelisted")
+        end
+    end
+})
+
+local OtherTab = Window:MakeTab({
+    Name = "Other",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local Section = OtherTab:AddSection({
+    Name = "Other"
+})
+
+
+
+PlayerTab:AddButton({
+    Name = "Fly Around The Target",
+    Callback = function()
+        if isWhitelisted(game.Players.LocalPlayer) then
+            local character = game.Players.LocalPlayer.Character
+local humanoid = character:WaitForChild("Humanoid")
+
+local platform = Instance.new("Part")
+platform.Anchored = true
+platform.Size = Vector3.new(5, 1, 5)
+platform.Transparency = 1
+platform.Position = Vector3.new(0, -100, 0)
+platform.Parent = game.Workspace
+
+local function getNearestPlayer()
+    local nearestPlayer = nil
+    local nearestDistance = 45
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer and player.Character then
+            local distance = (player.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).magnitude
+            if distance < nearestDistance then
+                nearestDistance = distance
+                nearestPlayer = player
+            end
+        end
+    end
+    return nearestPlayer
+end
+
+local function teleportAroundNearestPlayer(nearestPlayer)
+    if nearestPlayer and nearestPlayer.Character then
+        local radius = 2 + math.random() * 2
+        local angle = math.random() * 2 * math.pi
+        local height = math.random() * 12 - 2
+        local newX = nearestPlayer.Character.HumanoidRootPart.Position.X + math.cos(angle) * radius
+        local newY = nearestPlayer.Character.HumanoidRootPart.Position.Y + height
+        local newZ = nearestPlayer.Character.HumanoidRootPart.Position.Z + math.sin(angle) * radius
+        character.HumanoidRootPart.CFrame = CFrame.new(newX, newY, newZ)
+        platform.Position = Vector3.new(newX, newY - 2, newZ)
+    end
+end
+
+local playerGui = game.Players.LocalPlayer.PlayerGui
+local toggleGui = Instance.new("ScreenGui")
+toggleGui.Name = "TeleportToggle"
+toggleGui.Parent = playerGui
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Text = "Teleport: OFF"
+toggleButton.Size = UDim2.new(0, 100, 0, 30)
+toggleButton.Position = UDim2.new(0, 10, 0, 130)
+toggleButton.Parent = toggleGui
+
+local toggle = false
+local targetPlayer = nil
+
+local function teleportLoop()
+    if toggle then
+        if targetPlayer and targetPlayer.Character then
+            teleportAroundNearestPlayer(targetPlayer)
+        else
+            targetPlayer = getNearestPlayer()
+        end
+        game:GetService("RunService").RenderStepped:wait()
+        teleportLoop()
+    end
+end
+
+toggleButton.MouseButton1Click:Connect(function()
+    toggle = not toggle
+    if toggle then
+        toggleButton.Text = "Teleport: ON"
+        targetPlayer = getNearestPlayer()
+        teleportLoop()
+    else
+        toggleButton.Text = "Teleport: OFF"
+        platform.Position = Vector3.new(0, -100, 0)
+    end
+end)
+        else
+            game.Players.LocalPlayer:Kick("You are not whitelisted")
+        end
+    end
+})
+
+PlayerTab:AddButton({
+    Name = "Anti Hit (Still Under Develop but u can still use it)",
+    Callback = function()
+        if isWhitelisted(game.Players.LocalPlayer) then
+                 local Players = game:GetService("Players")
+local Character = game.Players.LocalPlayer.Character
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+local TeleportEnabled = false
+local targetPlayer = nil
+local platform = nil
+
+local function getNearestPlayer()
+    local nearestPlayer = nil
+    local nearestDistance = 45
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local distance = (HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).magnitude
+            if distance < nearestDistance then
+                nearestPlayer = player
+                nearestDistance = distance
+            end
+        end
+    end
+    return nearestPlayer
+end
+
+local function teleportToPlayer(player)
+    if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local position = player.Character.HumanoidRootPart.CFrame + Vector3.new(0, 12, 0)
+        HumanoidRootPart.CFrame = position
+        if platform then
+            platform:Destroy()
+        end
+        platform = Instance.new("Part")
+        platform.Anchored = true
+        platform.Transparency = 1 -- Make the platform invisible
+        platform.Size = Vector3.new(3, 0.5, 3)
+        platform.CFrame = position - Vector3.new(0, 0.5, 0)
+        platform.Parent = workspace
+
+        -- Check if the target player is still alive and has a character
+        local humanoid = player.Character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.Died:Connect(function()
+                if platform then
+                    platform:Destroy()
+                    platform = nil
+                end
+            end)
+        end
+
+        -- Check if the target player leaves the game
+        player.CharacterRemoving:Connect(function()
+            if platform then
+                platform:Destroy()
+                platform = nil
+            end
+        end)
+    end
+end
+
+-- Create a GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "TeleportGUI"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 100, 0, 30)
+toggleButton.Position = UDim2.new(0, 10, 0, 170)
+toggleButton.Text = "Anti Hit (TP above player): OFF"
+toggleButton.Font = Enum.Font.SourceSans
+toggleButton.FontSize = Enum.FontSize.Size14
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.BackgroundColor3 = Color3.new(0, 0, 0)
+toggleButton.BackgroundTransparency = 0.5
+toggleButton.Parent = gui
+
+toggleButton.MouseButton1Click:Connect(function()
+    TeleportEnabled = not TeleportEnabled
+    toggleButton.Text = "Anti Hit: " .. (TeleportEnabled and "ON" or "OFF")
+    if not TeleportEnabled and platform then
+        platform:Destroy()
+        platform = nil
+    end
+end)
+
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.P then
+        TeleportEnabled = not TeleportEnabled
+        print("Teleportation " .. (TeleportEnabled and "enabled" or "disabled"))
+        toggleButton.Text = "Teleport: " .. (TeleportEnabled and "ON" or "OFF")
+        if not TeleportEnabled and platform then
+            platform:Destroy()
+            platform = nil
+        end
+    end
+end)
+
+while true do
+    if TeleportEnabled then
+        if targetPlayer == nil then
+            targetPlayer = getNearestPlayer()
+        end
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            teleportToPlayer(targetPlayer)
+        else
+            targetPlayer = nil
+        end
+    else
+        targetPlayer = nil
+    end
+    wait(0.0014)
+end
+        else
+            game.Players.LocalPlayer:Kick("You are not whitelisted")
+        end
+    end
+})
+
+
+
+PlayerTab:AddButton({
+	Name = "Inf Stamina",
+	Callback = function()
+        if isWhitelisted(game.Players.LocalPlayer) then    
+                 -- Create a function to disable a LocalScript
+local function disableLocalScript(scriptName)
+    -- Get the local player's character
+    local character = game.Players.LocalPlayer.Character
+
+    -- Find the LocalScript with the given name
+    for _, script in pairs(character:GetDescendants()) do
+        if script:IsA("LocalScript") and script.Name == scriptName then
+            -- Disable the script
+            script.Disabled = true
+            print("Disabled LocalScript: ".. scriptName)
+            return
+        end
+    end
+    print("LocalScript not found: ".. scriptName)
+end
+
+-- Set the script name to disable
+local scriptName = "stamina"
+
+-- Disable the LocalScript
+disableLocalScript(scriptName)
+             else
+            game.Players.LocalPlayer:Kick("You are not whitelisted")
+        end
+end
+})
+
+
+
+PlayerTab:AddButton({
+	Name = "Anti Fall Damage",
+	Callback = function()
+        if isWhitelisted(game.Players.LocalPlayer) then    
+                 -- Create a function to disable a LocalScript
+local function disableLocalScript(scriptName)
+    -- Get the local player's character
+    local character = game.Players.LocalPlayer.Character
+
+    -- Find the LocalScript with the given name
+    for _, script in pairs(character:GetDescendants()) do
+        if script:IsA("LocalScript") and script.Name == scriptName then
+            -- Disable the script
+            script.Disabled = true
+            print("Disabled LocalScript: ".. scriptName)
+            return
+        end
+    end
+    print("LocalScript not found: ".. scriptName)
+end
+
+-- Set the script name to disable
+local scriptName = "fallDamage"
+
+-- Disable the LocalScript
+disableLocalScript(scriptName)
+             else
+            game.Players.LocalPlayer:Kick("You are not whitelisted")
+        end
+end
+})
+
+PlayerTab:AddButton({
+	Name = "Kill Aura",
+	Callback = function()
+        if isWhitelisted(game.Players.LocalPlayer) then    
+                -- Load the remote
+loadstring(game:HttpGet("https://raw.githubusercontent.com/qxkya/Kya-Ware/main/Get_Remotes"))()
+
+-- Create a function to get the closest player within a 18 stud radius
+local function getClosestPlayer()
+    local players = game:GetService("Players"):GetPlayers()
+    local closestPlayer = nil
+    local closestDistance = math.huge
+    for _, player in pairs(players) do
+        if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
+            local distance = (player.Character.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+            if distance <= 45 and distance < closestDistance then
+                closestPlayer = player
+                closestDistance = distance
+            end
+        end
+    end
+    return closestPlayer
+end
+
+-- Create a function to fire the remote
+local function fireRemote(target)
+    callRemote("meleePlayer", {
+        slot = 1,
+        cframe = CFrame.new(target.Character:GetPivot().Position),
+        instance = target
+    })
+end
+
+-- Create a GUI to toggle auto-melee
+local AutoMeleeGUI = Instance.new("ScreenGui")
+AutoMeleeGUI.Name = "AutoMeleeGUI"
+AutoMeleeGUI.Parent = game.Players.LocalPlayer.PlayerGui
+
+local AutoMeleeFrame = Instance.new("Frame")
+AutoMeleeFrame.Name = "AutoMeleeFrame"
+AutoMeleeFrame.Size = UDim2.new(0, 100, 0, 30)
+AutoMeleeFrame.Position = UDim2.new(0, 10, 0, 90)
+AutoMeleeFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+AutoMeleeFrame.BackgroundTransparency = 0.5
+AutoMeleeFrame.Parent = AutoMeleeGUI
+
+local AutoMeleeButton = Instance.new("TextButton")
+AutoMeleeButton.Name = "AutoMeleeButton"
+AutoMeleeButton.Text = "Kill Aura: Off"
+AutoMeleeButton.Size = UDim2.new(1, 0, 1, 0)
+AutoMeleeButton.Font = Enum.Font.SourceSans
+AutoMeleeButton.FontSize = Enum.FontSize.Size14
+AutoMeleeButton.TextColor3 = Color3.new(1, 1, 1)
+AutoMeleeButton.Parent = AutoMeleeFrame
+
+-- Create a variable to track the auto-melee state
+local AutoMeleeEnabled = false
+
+-- Function to toggle auto-melee
+local function toggleAutoMelee()
+    AutoMeleeEnabled = not AutoMeleeEnabled
+    AutoMeleeButton.Text = "Kill Aura: ".. (AutoMeleeEnabled and "On" or "Off")
+end
+
+-- Connect the toggle function to the button click event
+AutoMeleeButton.Activated:Connect(toggleAutoMelee)
+
+-- Connect the toggle function to the 'M' key press event
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.M then
+        toggleAutoMelee()
+    end
+end)
+
+-- Make the GUI movable
+local UserInputService = game:GetService("UserInputService")
+local dragging = false
+local dragInput = nil
+local dragStart = nil
+local startPos = nil
+
+local function update(input)
+    local delta = input.Position - dragStart
+    AutoMeleeFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+AutoMeleeFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = AutoMeleeFrame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if dragging and dragInput then
+        update(dragInput)
+    end
+end)
+
+-- Create a loop to repeat the process using RunService.Stepped
+game:GetService("RunService").Stepped:Connect(function()
+    if AutoMeleeEnabled then
+        local target = getClosestPlayer()
+        if target then
+            fireRemote(target)
+        end
+    end
+end)
+             else
+            game.Players.LocalPlayer:Kick("You are not whitelisted")
+        end
+end
+})
+
+
+ else
+            game.Players.LocalPlayer:Kick("You are not whitelisted")
+        end
